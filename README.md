@@ -30,7 +30,8 @@ client-side cached for 60s.
 
 ## Special Thanks
 - Vedal, for smadge content
-- Neuro, for uuh content
+- Neuro, for the uuh content
 - GPT Codex, for generating the whole codebase LULE
+- GitHub Copilot, for the commit messages xdd
 
-![Neuro Logo](images/favicon.png)
+<img src="images/favicon.png" alt="Neuro Logo" width="120" />
