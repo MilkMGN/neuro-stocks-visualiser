@@ -30,12 +30,12 @@ body {
               radial-gradient(circle at 50% 80%, rgba(123, 247, 196, 0.08), transparent 35%),
               var(--bg);
   color: var(--text);
-  font-family: "Manrope", system-ui, -apple-system, sans-serif;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   padding: 24px;
 }
 
 h1, h2, h3 {
-  font-family: "Sobiscuit", "Space Grotesk", "Manrope", sans-serif;
+  font-family: "Sobiscuit", "Segoe UI", Arial, sans-serif;
   margin: 0;
   letter-spacing: 0.02em;
 }
@@ -142,7 +142,7 @@ th { color: var(--muted); font-weight: 600; }
   gap: 8px;
   flex-wrap: wrap;
 }
-.activity strong { font-family: "Space Grotesk", sans-serif; }
+.activity strong { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
 
 .skeleton {
   background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05));
@@ -182,7 +182,7 @@ th { color: var(--muted); font-weight: 600; }
 }
 .banner span {
   color: #0c0b16;
-  font-family: "Space Grotesk", "Sobiscuit", sans-serif;
+  font-family: "Sobiscuit", "Segoe UI", Arial, sans-serif;
   letter-spacing: 0.01em;
 }
 
