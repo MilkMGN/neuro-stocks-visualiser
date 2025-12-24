@@ -481,12 +481,18 @@
             maintainAspectRatio: false,
             scales: {
               x: {
-            ticks: { maxRotation: 0, color: "#c9bedf", autoSkip: true, maxTicksLimit: 6, callback: (v) => {
-              const label = this.getLabelForValue ? this.getLabelForValue(v) : labels[v] || "";
-              return label.split(",")[1]?.trim() || label;
-            }},
-            grid: { display: false }
-          },
+                ticks: {
+                  maxRotation: 0,
+                  color: "#c9bedf",
+                  autoSkip: true,
+                  maxTicksLimit: 6,
+                  callback: (_value, idx) => {
+                    const label = labels[idx] || "";
+                    return label.split(",")[1]?.trim() || label;
+                  }
+                },
+                grid: { display: false }
+              },
           y: {
             ticks: { color: "#c9bedf" },
             grid: { color: "rgba(255,255,255,0.08)" }
