@@ -1,6 +1,6 @@
 # Neuro Stocks Visualiser
 
-Live, auto-refreshing view of Neuro's trading portfolio.
+Live, auto-refreshing view of Neuro's trading portfolio: https://neurostocks.milkmgn.online/ 
 
 ![Neuro trading](images/stocks.png)
 

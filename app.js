@@ -9,6 +9,7 @@ const SLEEP_CACHE_MS = 125000;
 let equityChart;
 let refreshTimer;
 let sleepCache = { at: 0, value: false };
+const themeToggleBtn = document.getElementById("theme-toggle");
 
 // Helpers
 const fmtCurrency = (v) => Number(v).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -218,7 +219,8 @@ const loadData = async () => {
     fetchTwitchStatus().catch((err) => console.warn("Twitch check failed", err));
 
     const updated = new Date();
-    document.getElementById("last-updated").textContent = `Last updated: ${updated.toLocaleString("en-GB", { hour12: false, timeZone: "UTC" })} UTC`;
+    const shortTime = updated.toLocaleTimeString("en-GB", { hour12: false, timeZone: "UTC" });
+    document.getElementById("last-updated").textContent = `Last: ${shortTime} UTC`;
   } catch (err) {
     console.error(err);
     const errorBox = document.getElementById("error-box");
@@ -236,6 +238,23 @@ const startAutoRefresh = () => {
   if (refreshTimer) clearInterval(refreshTimer);
   refreshTimer = setInterval(loadData, REFRESH_MS);
 };
+
+const applyTheme = (theme) => {
+  document.body.classList.remove("theme-light", "theme-lite");
+  if (theme === "light") document.body.classList.add("theme-light");
+  if (theme === "lite") document.body.classList.add("theme-lite");
+  if (themeToggleBtn) themeToggleBtn.textContent = `Theme: ${theme === "dark" ? "Dark" : theme === "light" ? "Light" : "Lite"}`;
+};
+
+const cycleTheme = () => {
+  const current = localStorage.getItem("theme") || "dark";
+  const next = current === "dark" ? "light" : current === "light" ? "lite" : "dark";
+  localStorage.setItem("theme", next);
+  applyTheme(next);
+};
+
+if (themeToggleBtn) themeToggleBtn.addEventListener("click", cycleTheme);
+applyTheme(localStorage.getItem("theme") || "dark");
 
 document.getElementById("refresh-btn").addEventListener("click", loadData);
 loadData();

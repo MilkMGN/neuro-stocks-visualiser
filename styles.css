@@ -20,6 +20,32 @@
   --shadow: 0 15px 60px rgba(0, 0, 0, 0.45);
 }
 
+.theme-light {
+  --bg: #f4f7fb;
+  --panel: #ffffff;
+  --muted: #65738a;
+  --accent: #7c3aed;
+  --accent-2: #22c55e;
+  --danger: #e11d48;
+  --success: #16a34a;
+  --text: #0f172a;
+  --border: rgba(0, 0, 0, 0.08);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+}
+
+.theme-lite {
+  --bg: #fdf7ff;
+  --panel: #fefefe;
+  --muted: #6b7280;
+  --accent: #ff70a6;
+  --accent-2: #70d6ff;
+  --danger: #f43f5e;
+  --success: #22c55e;
+  --text: #111827;
+  --border: rgba(0, 0, 0, 0.06);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -62,9 +88,9 @@ header {
 .pill {
   padding: 8px 12px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  color: var(--muted);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
+  color: var(--text);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -73,7 +99,7 @@ header {
 
 button {
   background: linear-gradient(120deg, var(--accent), var(--accent-2));
-  color: #0c0b16;
+  color: var(--text);
   border: none;
   padding: 10px 14px;
   border-radius: 14px;
