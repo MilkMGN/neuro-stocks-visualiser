@@ -301,11 +301,12 @@
         <img src="favicon.png" alt="Neuro icon">
         <div class="title-block">
           <h1>Neuro Stocks Visualiser</h1>
-          <div class="subtitle">Live view of VedalAI portfolio &amp; activity.</div>
+          <div class="subtitle">Live view of VedalAI bot portfolio &amp; activity.</div>
         </div>
       </div>
       <div class="controls">
-        <div class="pill">Auto-refresh every 30s</div>
+        <div class="pill">Auto-refresh every 5m</div>
+        <div class="pill">Times shown in UTC</div>
         <div class="pill" id="last-updated">Last updated: —</div>
         <button id="refresh-btn">Refresh now</button>
       </div>
@@ -380,7 +381,7 @@
 
   <script>
     const DATA_URL = "https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/refs/heads/main/portfolio.json";
-    const REFRESH_MS = 30000;
+    const REFRESH_MS = 300000;
     const HISTORY_LIMIT = 1200; // show the most recent points to keep the chart focused
     const SAMPLE_TARGET = 400;
     let equityChart;
@@ -391,7 +392,7 @@
     const fmtPercent = (v) => `${(Number(v) * 100).toFixed(2)}%`;
     const fmtDateTime = (isoOrTs) => {
       const d = typeof isoOrTs === "number" ? new Date(isoOrTs * 1000) : new Date(isoOrTs);
-      return d.toLocaleString(undefined, { hour12: false });
+      return d.toLocaleString("en-GB", { hour12: false, timeZone: "UTC" }) + " UTC";
     };
 
     const setDelta = (el, val) => {
@@ -481,9 +482,13 @@
         return;
       }
       tbody.innerHTML = positions.map((p) => {
-        const change = Number(p.changeToday);
+        const cp = Number(p.currentPrice);
+        const prev = Number(p.lastdayPrice);
+        const reported = Number(p.changeToday);
+        const derived = prev ? (cp - prev) / prev : 0;
+        const change = Number.isFinite(reported) && reported !== 0 ? reported : derived;
         const changeClass = change >= 0 ? "badge" : "badge negative";
-        const changeText = `${change >= 0 ? "▲" : "▼"} ${fmtPercent(change).replace("-", "")}`;
+        const changeText = `${change >= 0 ? "▲" : "▼"} ${fmtPercent(Math.abs(change))}`;
         return `
           <tr>
             <td><strong>${p.symbol}</strong></td>
@@ -555,7 +560,7 @@
         renderActivities(data.activities || {});
 
         const updated = new Date();
-        document.getElementById("last-updated").textContent = `Last updated: ${updated.toLocaleTimeString()}`;
+        document.getElementById("last-updated").textContent = `Last updated: ${updated.toLocaleString("en-GB", { hour12: false, timeZone: "UTC" })} UTC`;
       } catch (err) {
         console.error(err);
         alert("Failed to load latest data. Check console for details.");
