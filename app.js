@@ -4,7 +4,7 @@ const REFRESH_MS = 60000;
 const HISTORY_LIMIT = 1200;
 const SAMPLE_TARGET = 400;
 const TWITCH_PROXY_URL = window.TWITCH_PROXY_URL || "";
-const SLEEP_CACHE_MS = 60000;
+const SLEEP_CACHE_MS = 125000;
 
 let equityChart;
 let refreshTimer;
