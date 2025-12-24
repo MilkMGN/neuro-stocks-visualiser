@@ -4,9 +4,11 @@ const REFRESH_MS = 30000;
 const HISTORY_LIMIT = 1200;
 const SAMPLE_TARGET = 400;
 const TWITCH_PROXY_URL = window.TWITCH_PROXY_URL || "";
+const SLEEP_CACHE_MS = 60000;
 
 let equityChart;
 let refreshTimer;
+let sleepCache = { at: 0, value: false };
 
 // Helpers
 const fmtCurrency = (v) => Number(v).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
@@ -160,6 +162,11 @@ const fetchTwitchStatus = async () => {
     updateSleepBanner(false);
     return;
   }
+  const now = Date.now();
+  if (now - sleepCache.at < SLEEP_CACHE_MS) {
+    updateSleepBanner(sleepCache.value);
+    return;
+  }
   const res = await fetch(`${TWITCH_PROXY_URL}?t=${Date.now()}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Twitch proxy HTTP ${res.status}`);
   const text = await res.text();
@@ -169,7 +176,9 @@ const fetchTwitchStatus = async () => {
   } catch {
     throw new Error(`Twitch proxy non-JSON response (first chars: ${text.slice(0, 80)})`);
   }
-  updateSleepBanner(!!json.isSleeping);
+  const isSleeping = !!json.isSleeping;
+  sleepCache = { at: now, value: isSleeping };
+  updateSleepBanner(isSleeping);
 };
 
 const renderSummary = (account, history) => {
