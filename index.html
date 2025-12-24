@@ -23,6 +23,14 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="alternate icon" href="favicon.ico">
   <style>
+    @font-face {
+      font-family: "Sobiscuit";
+      src: url("./Sobiscuit.ttf") format("truetype");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root {
       /* Neuro-Sama inspired palette: neon magenta + cyan on deep violet */
       --bg: #0c0b16;
@@ -54,9 +62,9 @@
     }
 
     h1, h2, h3 {
-      font-family: "Space Grotesk", "Manrope", sans-serif;
+      font-family: "Sobiscuit", "Space Grotesk", "Manrope", sans-serif;
       margin: 0;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.02em;
     }
 
     a { color: var(--accent); }
@@ -373,6 +381,8 @@
   <script>
     const DATA_URL = "https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/refs/heads/main/portfolio.json";
     const REFRESH_MS = 30000;
+    const HISTORY_LIMIT = 1200; // show the most recent points to keep the chart focused
+    const SAMPLE_TARGET = 400;
     let equityChart;
     let refreshTimer;
 
@@ -393,7 +403,9 @@
       }
     };
 
-    const downsample = (arr, target = 500) => {
+    const sliceRecent = (arr, limit) => (Array.isArray(arr) && arr.length > limit ? arr.slice(-limit) : arr);
+
+    const downsample = (arr, target = SAMPLE_TARGET) => {
       if (!Array.isArray(arr) || arr.length <= target) return arr;
       const step = Math.ceil(arr.length / target);
       const result = [];
@@ -409,7 +421,8 @@
 
     const renderChart = (history) => {
       const ctx = document.getElementById("equity-chart").getContext("2d");
-      const sampled = downsample(history, 600);
+      const trimmed = sliceRecent(history, HISTORY_LIMIT);
+      const sampled = downsample(trimmed, SAMPLE_TARGET);
       const labels = sampled.map((p) => fmtDateTime(p.timestamp));
       const values = sampled.map((p) => p.equity);
       if (!equityChart) {
