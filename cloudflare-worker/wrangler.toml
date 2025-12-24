@@ -1,0 +1,10 @@
+name = "neuro-sleep-proxy"
+main = "worker.js"
+compatibility_date = "2024-06-01"
+
+# Uncomment and set your custom domain/route if desired:
+# routes = [{ pattern = "sleep.yourdomain.com/*", zone_id = "YOUR_ZONE_ID" }]
+
+# Secrets to set (no values here; use `wrangler secret put ...`):
+# - TWITCH_CLIENT_ID
+# - TWITCH_CLIENT_SECRET

@@ -8,17 +8,19 @@
   <link rel="canonical" href="https://neurostocks.milkmgn.online/" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Neuro Stocks Portfolio" />
-  <meta property="og:description" content="Auto-updating dashboard for the Neuro-Sama trading bot — equity, positions, and activity." />
+  <meta property="og:description" content="Auto-updating dashboard for the Neuro-Sama trading bot - equity, positions, and activity." />
   <meta property="og:url" content="https://neurostocks.milkmgn.online/" />
   <meta property="og:image" content="https://neurostocks.milkmgn.online/favicon.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Neuro Stocks Portfolio" />
-  <meta name="twitter:description" content="Auto-updating dashboard for the Neuro-Sama trading bot — equity, positions, and activity." />
+  <meta name="twitter:description" content="Auto-updating dashboard for the Neuro-Sama trading bot - equity, positions, and activity." />
   <meta name="twitter:image" content="https://neurostocks.milkmgn.online/favicon.png" />
   <meta name="theme-color" content="#d86cff" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Optional: provide Twitch proxy URL via env.js (create from env.example.js) -->
+  <script src="env.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="alternate icon" href="favicon.ico">
@@ -287,6 +289,26 @@
       100% { background-position: -200% 0; }
     }
 
+    .banner {
+      margin: 12px 0 6px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(120deg, rgba(216,108,255,0.18), rgba(99,230,255,0.12));
+      color: #0c0b16;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .banner span {
+      color: #0c0b16;
+      font-family: "Space Grotesk", "Sobiscuit", sans-serif;
+      letter-spacing: 0.01em;
+    }
+
     @media (max-width: 720px) {
       header { flex-direction: column; align-items: flex-start; }
       .metric-value { font-size: 22px; }
@@ -301,16 +323,23 @@
         <img src="favicon.png" alt="Neuro icon">
         <div class="title-block">
           <h1>Neuro Stocks Visualiser</h1>
-          <div class="subtitle">Live view of VedalAI bot portfolio &amp; activity.</div>
+          <div class="subtitle">Live view of VedalAI bot portfolio &amp; activity. Times shown in UTC.</div>
         </div>
       </div>
       <div class="controls">
-        <div class="pill">Auto-refresh every 5m</div>
-        <div class="pill">Times shown in UTC</div>
-        <div class="pill" id="last-updated">Last updated: —</div>
+        <div class="pill">Auto-refresh every 30s</div>
+        <div class="pill" id="last-updated">Last updated: --</div>
         <button id="refresh-btn">Refresh now</button>
       </div>
     </header>
+
+    <div class="banner" id="sleep-banner">
+      <span>Neuro is currently asleep! No more trades till she wakes up at 1pm UTC.</span>
+    </div>
+
+    <div class="pill" id="error-box" style="display:none; margin-bottom: 10px; border-color: rgba(255,107,138,0.6); color: #ff6b8a; background: rgba(255,107,138,0.08);">
+      Error: <span id="error-text"></span>
+    </div>
 
     <section class="grid" id="summary">
       <div class="card">
@@ -380,10 +409,12 @@
   </div>
 
   <script>
-    const DATA_URL = "https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/refs/heads/main/portfolio.json";
-    const REFRESH_MS = 300000;
+    // Use canonical raw URL (avoids occasional issues with refs/heads form).
+    const DATA_URL = "https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/main/portfolio.json";
+    const REFRESH_MS = 30000;
     const HISTORY_LIMIT = 1200; // show the most recent points to keep the chart focused
     const SAMPLE_TARGET = 400;
+    const TWITCH_PROXY_URL = window.TWITCH_PROXY_URL || "";
     let equityChart;
     let refreshTimer;
 
@@ -392,7 +423,7 @@
     const fmtPercent = (v) => `${(Number(v) * 100).toFixed(2)}%`;
     const fmtDateTime = (isoOrTs) => {
       const d = typeof isoOrTs === "number" ? new Date(isoOrTs * 1000) : new Date(isoOrTs);
-      return d.toLocaleString("en-GB", { hour12: false, timeZone: "UTC" }) + " UTC";
+      return d.toLocaleString("en-GB", { hour12: false });
     };
 
     const setDelta = (el, val) => {
@@ -450,20 +481,31 @@
             maintainAspectRatio: false,
             scales: {
               x: {
-                ticks: { maxRotation: 0, color: "#9fb1d0", autoSkip: true, maxTicksLimit: 8 },
-                grid: { display: false }
-              },
-              y: {
-                ticks: { color: "#9fb1d0" },
-                grid: { color: "rgba(255,255,255,0.08)" }
-              }
-            },
+            ticks: { maxRotation: 0, color: "#c9bedf", autoSkip: true, maxTicksLimit: 6, callback: (v) => {
+              const label = this.getLabelForValue ? this.getLabelForValue(v) : labels[v] || "";
+              return label.split(",")[1]?.trim() || label;
+            }},
+            grid: { display: false }
+          },
+          y: {
+            ticks: { color: "#c9bedf" },
+            grid: { color: "rgba(255,255,255,0.08)" }
+          }
+        },
             plugins: {
               legend: { display: false },
               tooltip: {
                 mode: "index",
                 intersect: false,
-                callbacks: { label: (ctx) => fmtCurrency(ctx.parsed.y) }
+                backgroundColor: "rgba(12, 11, 22, 0.85)",
+                borderColor: "rgba(216,108,255,0.6)",
+                borderWidth: 1,
+                titleColor: "#f3eaff",
+                bodyColor: "#f3eaff",
+                callbacks: {
+                  label: (ctx) => fmtCurrency(ctx.parsed.y),
+                  title: (items) => labels[items[0].dataIndex]
+                }
               }
             }
           }
@@ -527,6 +569,24 @@
       }).join("");
     };
 
+    const updateSleepBanner = (isSleeping) => {
+      const banner = document.getElementById("sleep-banner");
+      if (!banner) return;
+      banner.style.display = isSleeping ? "flex" : "none";
+    };
+
+    const fetchTwitchStatus = async () => {
+      if (!TWITCH_PROXY_URL) {
+        updateSleepBanner(false);
+        return;
+      }
+      const res = await fetch(`${TWITCH_PROXY_URL}?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Twitch proxy HTTP ${res.status}`);
+      const json = await res.json();
+      const isSleeping = !!json.isSleeping;
+      updateSleepBanner(isSleeping);
+    };
+
     const renderSummary = (account, history) => {
       const equity = Number(account.equity);
       const cash = Number(account.cash);
@@ -554,16 +614,25 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
+        document.getElementById("error-box").style.display = "none";
+        document.getElementById("error-text").textContent = "";
+
         renderSummary(data.account, data.history);
         renderChart(data.history || []);
         renderPositions(data.positions || []);
         renderActivities(data.activities || {});
+        fetchTwitchStatus().catch((err) => console.warn("Twitch check failed", err));
 
         const updated = new Date();
         document.getElementById("last-updated").textContent = `Last updated: ${updated.toLocaleString("en-GB", { hour12: false, timeZone: "UTC" })} UTC`;
       } catch (err) {
         console.error(err);
-        alert("Failed to load latest data. Check console for details.");
+        const errorBox = document.getElementById("error-box");
+        const errorText = document.getElementById("error-text");
+        if (errorBox && errorText) {
+          errorText.textContent = err.message || "Unknown error";
+          errorBox.style.display = "inline-flex";
+        }
       } finally {
         document.getElementById("refresh-btn").disabled = false;
       }
