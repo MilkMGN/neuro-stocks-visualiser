@@ -163,7 +163,7 @@ th { color: var(--muted); font-weight: 600; }
   border: 1px solid rgba(255,255,255,0.14);
   background: linear-gradient(120deg, rgba(216,108,255,0.22), rgba(99,230,255,0.16));
   color: var(--text);
-  font-weight: 700;
+  font-weight: 500;
   display: none;
   align-items: center;
   gap: 12px;
