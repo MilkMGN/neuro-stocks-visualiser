@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neuro Stocks Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      /* Neuro-Sama inspired palette: neon magenta + cyan on deep violet */
+      --bg: #0c0b16;
+      --panel: #161428;
+      --muted: #b7a8d6;
+      --accent: #d86cff;
+      --accent-2: #63e6ff;
+      --danger: #ff6b8a;
+      --success: #7bf7c4;
+      --text: #f3eaff;
+      --border: rgba(255, 255, 255, 0.12);
+      --shadow: 0 15px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 18% 22%, rgba(216, 108, 255, 0.12), transparent 35%),
+                  radial-gradient(circle at 78% 6%, rgba(99, 230, 255, 0.12), transparent 30%),
+                  radial-gradient(circle at 50% 80%, rgba(123, 247, 196, 0.08), transparent 35%),
+                  var(--bg);
+      color: var(--text);
+      font-family: "Manrope", system-ui, -apple-system, sans-serif;
+      padding: 24px;
+    }
+
+    h1, h2, h3 {
+      font-family: "Space Grotesk", "Manrope", sans-serif;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    a { color: var(--accent); }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .title-block h1 {
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      color: #0c0b16;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.28);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.0));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 80% 0%, rgba(255, 184, 112, 0.08), transparent 35%);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .delta {
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+      color: #0c0b16;
+      background: var(--success);
+    }
+
+    .delta.negative {
+      background: var(--danger);
+      color: #0c0b16;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 22px 0 12px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 300px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px 6px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      color: var(--text);
+      font-weight: 600;
+      background: rgba(216, 108, 255, 0.08);
+    }
+
+    .badge.negative {
+      border-color: rgba(255, 107, 138, 0.5);
+      background: rgba(255, 107, 138, 0.14);
+      color: var(--danger);
+    }
+
+    .mini {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .activity-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .activity {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .activity strong { font-family: "Space Grotesk", sans-serif; }
+
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 10px;
+      height: 18px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    @media (max-width: 720px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .metric-value { font-size: 22px; }
+      body { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="title-block">
+        <h1>Neuro Stocks Visualiser</h1>
+        <div class="subtitle">Live view of VedalAI bot portfolio &amp; activity.</div>
+      </div>
+      <div class="controls">
+        <div class="pill">Auto-refresh every 30s</div>
+        <div class="pill" id="last-updated">Last updated: —</div>
+        <button id="refresh-btn">Refresh now</button>
+      </div>
+    </header>
+
+    <section class="grid" id="summary">
+      <div class="card">
+        <div class="metric-label">Portfolio Value</div>
+        <div class="metric-value" id="portfolio-value"><span class="skeleton" style="width: 140px;"></span></div>
+        <div class="muted">Total equity including positions</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Cash</div>
+        <div class="metric-value" id="cash"><span class="skeleton" style="width: 90px;"></span></div>
+        <div class="muted">Uninvested cash balance</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Since Inception</div>
+        <div class="metric-value"><span id="pl"></span><span id="pl-percent" class="delta"></span></div>
+        <div class="muted">vs $20,000 initial capital</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Latest Move</div>
+        <div class="metric-value"><span id="last-change"></span><span id="last-change-percent" class="delta"></span></div>
+        <div class="muted" id="last-change-time">Most recent history point</div>
+      </div>
+    </section>
+
+    <div class="section-title">
+      <h2>Equity Curve</h2>
+      <div class="mini">Downsampled for performance; chronological history.</div>
+    </div>
+    <div class="card">
+      <canvas id="equity-chart" height="340"></canvas>
+    </div>
+
+    <div class="section-title">
+      <h2>Open Positions</h2>
+      <div class="mini">Market value, basis, and intraday change.</div>
+    </div>
+    <div class="card">
+      <table id="positions-table">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Qty</th>
+            <th>Market Value</th>
+            <th>Cost Basis</th>
+            <th>Price</th>
+            <th>Prev Close</th>
+            <th>Today</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="7"><div class="skeleton" style="width: 100%; height: 18px;"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title">
+      <h2>Recent Activity</h2>
+      <div class="mini">Flattened &amp; sorted fills.</div>
+    </div>
+    <div class="card">
+      <div class="activity-list" id="activity-list">
+        <div class="skeleton" style="width: 100%; height: 16px;"></div>
+        <div class="skeleton" style="width: 80%; height: 16px;"></div>
+        <div class="skeleton" style="width: 90%; height: 16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DATA_URL = "https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/refs/heads/main/portfolio.json";
+    const REFRESH_MS = 30000;
+    let equityChart;
+    let refreshTimer;
+
+    const fmtCurrency = (v) => Number(v).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+    const fmtNumber = (v) => Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 });
+    const fmtPercent = (v) => `${(Number(v) * 100).toFixed(2)}%`;
+    const fmtDateTime = (isoOrTs) => {
+      const d = typeof isoOrTs === "number" ? new Date(isoOrTs * 1000) : new Date(isoOrTs);
+      return d.toLocaleString(undefined, { hour12: false });
+    };
+
+    const setDelta = (el, val) => {
+      el.textContent = val;
+      if (typeof val === "string" && val.startsWith("-")) {
+        el.classList.add("negative");
+      } else {
+        el.classList.remove("negative");
+      }
+    };
+
+    const downsample = (arr, target = 500) => {
+      if (!Array.isArray(arr) || arr.length <= target) return arr;
+      const step = Math.ceil(arr.length / target);
+      const result = [];
+      for (let i = 0; i < arr.length; i += step) {
+        result.push(arr[i]);
+      }
+      // Ensure last point is included for the freshest reading.
+      if (result[result.length - 1] !== arr[arr.length - 1]) {
+        result.push(arr[arr.length - 1]);
+      }
+      return result;
+    };
+
+    const renderChart = (history) => {
+      const ctx = document.getElementById("equity-chart").getContext("2d");
+      const sampled = downsample(history, 600);
+      const labels = sampled.map((p) => fmtDateTime(p.timestamp));
+      const values = sampled.map((p) => p.equity);
+      if (!equityChart) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, "rgba(216, 108, 255, 0.35)");
+        gradient.addColorStop(1, "rgba(216, 108, 255, 0.05)");
+        equityChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [{
+              label: "Equity",
+              data: values,
+              borderColor: "#d86cff",
+              borderWidth: 2.5,
+              fill: true,
+              backgroundColor: gradient,
+              tension: 0.25,
+              pointRadius: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                ticks: { maxRotation: 0, color: "#9fb1d0", autoSkip: true, maxTicksLimit: 8 },
+                grid: { display: false }
+              },
+              y: {
+                ticks: { color: "#9fb1d0" },
+                grid: { color: "rgba(255,255,255,0.08)" }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                callbacks: { label: (ctx) => fmtCurrency(ctx.parsed.y) }
+              }
+            }
+          }
+        });
+      } else {
+        equityChart.data.labels = labels;
+        equityChart.data.datasets[0].data = values;
+        equityChart.update();
+      }
+    };
+
+    const renderPositions = (positions) => {
+      const tbody = document.querySelector("#positions-table tbody");
+      if (!positions || positions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">No positions.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = positions.map((p) => {
+        const change = Number(p.changeToday);
+        const changeClass = change >= 0 ? "badge" : "badge negative";
+        const changeText = `${change >= 0 ? "▲" : "▼"} ${fmtPercent(change).replace("-", "")}`;
+        return `
+          <tr>
+            <td><strong>${p.symbol}</strong></td>
+            <td>${fmtNumber(p.qty)}</td>
+            <td>${fmtCurrency(p.marketValue)}</td>
+            <td>${fmtCurrency(p.costBasis)}</td>
+            <td>${fmtCurrency(p.currentPrice)}</td>
+            <td>${fmtCurrency(p.lastdayPrice)}</td>
+            <td><span class="${changeClass}">${changeText}</span></td>
+          </tr>
+        `;
+      }).join("");
+    };
+
+    const renderActivities = (activities) => {
+      const container = document.getElementById("activity-list");
+      const items = Object.entries(activities || {}).flatMap(([id, arr]) =>
+        arr.map((a) => ({ ...a, id }))
+      );
+      if (items.length === 0) {
+        container.innerHTML = "<div class='muted'>No activity.</div>";
+        return;
+      }
+      items.sort((a, b) => new Date(b.transaction_time) - new Date(a.transaction_time));
+      const topItems = items.slice(0, 20);
+      container.innerHTML = topItems.map((a) => {
+        const sideColor = a.side === "buy" ? "var(--success)" : "var(--danger)";
+        return `
+          <div class="activity">
+            <div>
+              <strong>${a.side.toUpperCase()}</strong> ${a.qty} ${a.symbol} @ ${fmtCurrency(a.price)}
+            </div>
+            <div class="mini" style="color:${sideColor}">${fmtDateTime(a.transaction_time)}</div>
+          </div>
+        `;
+      }).join("");
+    };
+
+    const renderSummary = (account, history) => {
+      const equity = Number(account.equity);
+      const cash = Number(account.cash);
+      const original = Number(account.originalInvestment || 20000);
+      const delta = equity - original;
+      const deltaPct = original ? delta / original : 0;
+
+      document.getElementById("portfolio-value").textContent = fmtCurrency(equity);
+      document.getElementById("cash").textContent = fmtCurrency(cash);
+      document.getElementById("pl").textContent = fmtCurrency(delta);
+      setDelta(document.getElementById("pl-percent"), `${(deltaPct * 100).toFixed(2)}%`);
+
+      const latest = history?.[history.length - 1];
+      if (latest) {
+        document.getElementById("last-change").textContent = fmtCurrency(latest.change || 0);
+        setDelta(document.getElementById("last-change-percent"), fmtPercent(latest.changePercent || 0));
+        document.getElementById("last-change-time").textContent = `At ${fmtDateTime(latest.timestamp)}`;
+      }
+    };
+
+    const loadData = async () => {
+      document.getElementById("refresh-btn").disabled = true;
+      try {
+        const res = await fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        renderSummary(data.account, data.history);
+        renderChart(data.history || []);
+        renderPositions(data.positions || []);
+        renderActivities(data.activities || {});
+
+        const updated = new Date();
+        document.getElementById("last-updated").textContent = `Last updated: ${updated.toLocaleTimeString()}`;
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load latest data. Check console for details.");
+      } finally {
+        document.getElementById("refresh-btn").disabled = false;
+      }
+    };
+
+    const startAutoRefresh = () => {
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(loadData, REFRESH_MS);
+    };
+
+    document.getElementById("refresh-btn").addEventListener("click", loadData);
+    loadData();
+    startAutoRefresh();
+  </script>
+</body>
+</html>
