@@ -8,7 +8,7 @@ Live, auto-refreshing view of Neuro's trading portfolio.
 - Portfolio summary: value, cash, P/L vs. initial capital, latest move.
 - Equity curve: downsampled line chart of historical equity.
 - Open positions: qty, market value, basis, price, prev close, intraday change.
-- Recent activity: latest fills flattened and sorted.- Sleep status: optional banner if the bot is streaming “I’m Only Sleeping”.
+- Recent activity: latest fills flattened and sorted.- Sleep status: optional banner if vedal987 is streaming “I’m Only Sleeping”.
 ## How it works
 - Data source: `https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/main/portfolio.json` (fetched every 30s).
 - Sleep status: fetched from a Cloudflare Worker; 
