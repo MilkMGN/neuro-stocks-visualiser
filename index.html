@@ -582,7 +582,13 @@
       }
       const res = await fetch(`${TWITCH_PROXY_URL}?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`Twitch proxy HTTP ${res.status}`);
-      const json = await res.json();
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (err) {
+        throw new Error(`Twitch proxy non-JSON response (first chars: ${text.slice(0, 80)})`);
+      }
       const isSleeping = !!json.isSleeping;
       updateSleepBanner(isSleeping);
     };
