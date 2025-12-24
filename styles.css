@@ -181,7 +181,7 @@ th { color: var(--muted); font-weight: 600; }
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
 }
 .banner span {
-  color: #0c0b16;
+  color: var(--text);
   font-family: "Sobiscuit", "Segoe UI", Arial, sans-serif;
   letter-spacing: 0.01em;
 }

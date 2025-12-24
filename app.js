@@ -1,6 +1,6 @@
 // Config
 const DATA_URL = "https://raw.githubusercontent.com/VedalAI/neuro-stocks-data/main/portfolio.json";
-const REFRESH_MS = 30000;
+const REFRESH_MS = 60000;
 const HISTORY_LIMIT = 1200;
 const SAMPLE_TARGET = 400;
 const TWITCH_PROXY_URL = window.TWITCH_PROXY_URL || "";
