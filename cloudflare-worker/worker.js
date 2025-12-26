@@ -33,14 +33,25 @@ async function getAppToken(env) {
 }
 
 async function fetchStream(env) {
-  const token = await getAppToken(env);
   const url = `https://api.twitch.tv/helix/streams?user_login=${CHANNEL}`;
-  const resp = await fetch(url, {
-    headers: {
-      "Client-ID": env.TWITCH_CLIENT_ID,
-      Authorization: `Bearer ${token}`
-    }
-  });
+  const tryOnce = async (forceNewToken = false) => {
+    const token = forceNewToken ? await getAppToken(env).then(() => tokenCache.token) : await getAppToken(env);
+    const resp = await fetch(url, {
+      headers: {
+        "Client-ID": env.TWITCH_CLIENT_ID,
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return resp;
+  };
+
+  let resp = await tryOnce(false);
+  if (resp.status === 401) {
+    // Token likely expired or invalid in this edge; refresh and retry once.
+    tokenCache = { token: null, expiresAt: 0 };
+    resp = await tryOnce(true);
+  }
+
   if (!resp.ok) throw new Error(`Streams HTTP ${resp.status}`);
   const json = await resp.json();
   return json.data && json.data[0];
